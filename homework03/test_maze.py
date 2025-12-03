@@ -1,3 +1,5 @@
+"""Unit tests for maze module."""
+
 import unittest
 from random import seed
 
@@ -5,7 +7,10 @@ import maze
 
 
 class MazeTest(unittest.TestCase):
-    def test_remove_wall(self):
+    """Test cases for maze generation and solving functions."""
+
+    def test_remove_wall(self) -> None:
+        """Test remove_wall function."""
         seed(2)
         grid_1 = [
             ["■", "■", "■", "■", "■"],
@@ -74,7 +79,8 @@ class MazeTest(unittest.TestCase):
             maze.remove_wall(grid_4, coord_4),
         )
 
-    def test_bin_tree_maze(self):
+    def test_bin_tree_maze(self) -> None:
+        """Test bin_tree_maze function."""
         seed(42)
         expected_grid_42 = [
             ["■", "■", "■", "■", "■"],
@@ -115,7 +121,8 @@ class MazeTest(unittest.TestCase):
         ]
         self.assertEqual(expected_grid_f, maze.bin_tree_maze(5, 5, random_exit=False))
 
-    def test_get_exits(self):
+    def test_get_exits(self) -> None:
+        """Test get_exits function."""
         grid_1 = [
             ["■", "X", "■", "■", "■"],
             ["■", " ", " ", " ", "■"],
@@ -141,7 +148,8 @@ class MazeTest(unittest.TestCase):
         ]
         self.assertEqual([(1, 0)], maze.get_exits(grid_3))
 
-    def test_encircled_exit(self):
+    def test_encircled_exit(self) -> None:
+        """Test encircled_exit function."""
         grid = [
             ["■", "■", "■", "■", "■"],
             ["■", " ", "■", " ", "■"],
@@ -163,7 +171,8 @@ class MazeTest(unittest.TestCase):
         self.assertTrue(maze.encircled_exit(grid, (2, 4)))
         self.assertTrue(maze.encircled_exit(grid, (4, 2)))
 
-    def test_make_step(self):
+    def test_make_step(self) -> None:
+        """Test make_step function."""
         grid_1 = [
             ["■", "■", "■", "■", "■", "■", "■", "■", "■", "■", "■"],
             ["■", 0, 0, 0, 0, 0, 0, 0, 0, 0, "■"],
@@ -233,11 +242,15 @@ class MazeTest(unittest.TestCase):
             maze.make_step(grid_3, k_3),
         )
 
-    def test_solve_maze(self):
+    def test_solve_maze(self) -> None:
+        """Test solve_maze function."""
         seed(34)
         grid = maze.bin_tree_maze(5, 5)
         _, path_ = maze.solve_maze(grid)
-        self.assertEqual([(3, 0), (3, 1), (2, 1), (1, 1), (1, 2), (1, 3), (2, 3), (2, 4)], path_)
+        self.assertEqual(
+            [(3, 0), (3, 1), (2, 1), (1, 1), (1, 2), (1, 3), (2, 3), (2, 4)],
+            path_,
+        )
 
         seed(4)
         grid = maze.bin_tree_maze(5, 5)
@@ -264,7 +277,8 @@ class MazeTest(unittest.TestCase):
         _, path_ = maze.solve_maze(grid)
         self.assertEqual([(4, 3), (3, 3), (3, 2), (3, 1), (3, 0)], path_)
 
-    def test_shortest_path(self):
+    def test_shortest_path(self) -> None:
+        """Test shortest_path function."""
         grid_1 = [
             ["■", "■", "■", "■", "■"],
             ["■", 0, 0, 0, "■"],
@@ -273,7 +287,10 @@ class MazeTest(unittest.TestCase):
             ["■", "■", "■", 5, "■"],
         ]
         second_exit_1 = (4, 3)
-        self.assertEqual([(4, 3), (3, 3), (3, 2), (3, 1), (3, 0)], maze.shortest_path(grid_1, second_exit_1))
+        self.assertEqual(
+            [(4, 3), (3, 3), (3, 2), (3, 1), (3, 0)],
+            maze.shortest_path(grid_1, second_exit_1),
+        )
 
         grid_2 = [
             ["■", "■", "■", "■", "■", 1, "■"],
@@ -286,7 +303,17 @@ class MazeTest(unittest.TestCase):
         ]
         second_exit_2 = (3, 0)
         self.assertEqual(
-            [(3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (2, 5), (1, 5), (0, 5)],
+            [
+                (3, 0),
+                (3, 1),
+                (3, 2),
+                (3, 3),
+                (3, 4),
+                (3, 5),
+                (2, 5),
+                (1, 5),
+                (0, 5),
+            ],
             maze.shortest_path(grid_2, second_exit_2),
         )
 
