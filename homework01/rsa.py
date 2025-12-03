@@ -1,3 +1,5 @@
+"""RSA encryption and decryption implementation."""
+
 import random
 from typing import List, Tuple
 
@@ -47,20 +49,29 @@ def multiplicative_inverse(e: int, phi: int) -> int:
     # Находим x такое, что (e * x) % phi = 1
     a, b, u = 0, phi, 1
     while e > 0:
-        q = b // e
+        quotient = b // e
         r = b % e
-        m = a - u * q
+        m = a - u * quotient
         b, e, a, u = e, r, u, m
     if b == 1:
         return a % phi
-    else:
-        raise ValueError("Multiplicative inverse does not exist")
+    raise ValueError("Multiplicative inverse does not exist")
 
 
 def generate_keypair(p: int, q: int) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    """
+    Generate RSA public and private keypair.
+
+    Args:
+        p: First prime number
+        q: Second prime number
+
+    Returns:
+        Tuple containing public key (e, n) and private key (d, n)
+    """
     if not (is_prime(p) and is_prime(q)):
         raise ValueError("Both numbers must be prime.")
-    elif p == q:
+    if p == q:
         raise ValueError("p and q cannot be equal")
 
     # n = pq
@@ -86,6 +97,16 @@ def generate_keypair(p: int, q: int) -> Tuple[Tuple[int, int], Tuple[int, int]]:
 
 
 def encrypt(pk: Tuple[int, int], plaintext: str) -> List[int]:
+    """
+    Encrypt plaintext using RSA public key.
+
+    Args:
+        pk: Public key tuple (e, n)
+        plaintext: Message to encrypt
+
+    Returns:
+        List of encrypted integers
+    """
     # Unpack the key into it's components
     key, n = pk
     # Convert each letter in the plaintext to numbers based on
@@ -96,6 +117,16 @@ def encrypt(pk: Tuple[int, int], plaintext: str) -> List[int]:
 
 
 def decrypt(pk: Tuple[int, int], ciphertext: List[int]) -> str:
+    """
+    Decrypt ciphertext using RSA private key.
+
+    Args:
+        pk: Private key tuple (d, n)
+        ciphertext: List of encrypted integers
+
+    Returns:
+        Decrypted plaintext string
+    """
     # Unpack the key into its components
     key, n = pk
     # Generate the plaintext based on the ciphertext and key using a^b mod m
@@ -106,15 +137,15 @@ def decrypt(pk: Tuple[int, int], ciphertext: List[int]) -> str:
 
 if __name__ == "__main__":
     print("RSA Encrypter/ Decrypter")
-    p = int(input("Enter a prime number (17, 19, 23, etc): "))
-    q = int(input("Enter another prime number (Not one you entered above): "))
+    prime_p = int(input("Enter a prime number (17, 19, 23, etc): "))
+    prime_q = int(input("Enter another prime number (Not one you entered above): "))
     print("Generating your public/private keypairs now . . .")
-    public, private = generate_keypair(p, q)
+    public, private = generate_keypair(prime_p, prime_q)
     print("Your public key is ", public, " and your private key is ", private)
     message = input("Enter a message to encrypt with your private key: ")
     encrypted_msg = encrypt(private, message)
     print("Your encrypted message is: ")
-    print("".join(map(lambda x: str(x), encrypted_msg)))
+    print("".join(map(str, encrypted_msg)))
     print("Decrypting message with public key ", public, " . . .")
     print("Your message is:")
     print(decrypt(public, encrypted_msg))
