@@ -191,10 +191,10 @@ def generate_sudoku(N: int) -> tp.List[tp.List[str]]:
     True
     """
     N = N if 0 <= N <= 81 else 81
-    
+
     # Генерируем пустое поле
     empty_grid = [["."] * 9 for _ in range(9)]
-    
+
     # Решаем пустое поле - получаем случайное решение
     # Для генерации разных решений используем случайный порядок перебора значений
     def solve_for_generation(grid: tp.List[tp.List[str]]) -> tp.Optional[tp.List[tp.List[str]]]:
@@ -212,10 +212,10 @@ def generate_sudoku(N: int) -> tp.List[tp.List[str]]:
                 return res
             grid[r][c] = "."
         return None
-    
+
     # Генерируем решение
     solved_grid = solve_for_generation(empty_grid)
-    
+
     if solved_grid is None:
         # Если не получилось решить, используем базовое решение
         solved_grid = [
@@ -229,15 +229,15 @@ def generate_sudoku(N: int) -> tp.List[tp.List[str]]:
             ["2", "8", "7", "4", "1", "9", "6", "3", "5"],
             ["3", "4", "5", "2", "8", "6", "1", "7", "9"],
         ]
-    
+
     # Удаляем элементы до получения N заполненных
     positions = [(r, c) for r in range(9) for c in range(9)]
     shuffle(positions)
-    
+
     new_grid = [row[:] for row in solved_grid]  # Копируем решение
-    for r, c in positions[:81 - N]:
+    for r, c in positions[: 81 - N]:
         new_grid[r][c] = "."
-    
+
     return new_grid
 
 
