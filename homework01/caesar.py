@@ -16,13 +16,15 @@ def encrypt_caesar(plaintext: str, shift: int = 3) -> str:
     """
     ciphertext = ""
     alphabet_size = ord("Z") - ord("A") + 1
+    base_upper = ord("A")
+    base_lower = ord("a")
 
     for char in plaintext:
         if char.isalpha():
             if char.isupper():
-                base = ord("A")
+                base = base_upper
             else:
-                base = ord("a")
+                base = base_lower
             new_char_code = (ord(char) - base + shift) % alphabet_size + base
             ciphertext += chr(new_char_code)
         else:
@@ -46,13 +48,15 @@ def decrypt_caesar(ciphertext: str, shift: int = 3) -> str:
 
     plaintext = ""
     alphabet_size = ord("Z") - ord("A") + 1
+    base_upper = ord("A")
+    base_lower = ord("a")
 
     for char in ciphertext:
         if char.isalpha():
             if char.isupper():
-                base = ord("A")
+                base = base_upper
             else:
-                base = ord("a")
+                base = base_lower
             new_char_code = (ord(char) - base - shift) % alphabet_size + base
             plaintext += chr(new_char_code)
         else:
