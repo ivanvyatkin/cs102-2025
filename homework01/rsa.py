@@ -15,10 +15,8 @@ def is_prime(n: int) -> bool:
     """
     if n < 2:
         return False
-    if n == 2:
-        return True
-    if n % 2 == 0:
-        return False
+    if n == 2 or n % 2 == 0:
+        return n == 2
 
     # Проверяем делители от 3 до sqrt(n)
     i = 3
