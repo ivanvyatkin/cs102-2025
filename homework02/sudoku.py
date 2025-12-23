@@ -1,6 +1,6 @@
 import pathlib
 import typing as tp
-from random import randint
+from random import randint, shuffle
 
 T = tp.TypeVar("T")
 
@@ -62,7 +62,7 @@ def get_col(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -> tp.List[str
     >>> get_col([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (0, 2))
     ['3', '6', '9']
     """
-    return [grid[r][pos[1]] for r in range(len(grid))]
+    return [row[pos[1]] for row in grid]
 
 
 def get_block(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -> tp.List[str]:
@@ -190,24 +190,54 @@ def generate_sudoku(N: int) -> tp.List[tp.List[str]]:
     >>> check_solution(solution)
     True
     """
-
     N = N if 0 <= N <= 81 else 81
-    new_grid = [
-        ["5", "3", "4", "6", "7", "8", "9", "1", "2"],
-        ["6", "7", "2", "1", "9", "5", "3", "4", "8"],
-        ["1", "9", "8", "3", "4", "2", "5", "6", "7"],
-        ["8", "5", "9", "7", "6", "1", "4", "2", "3"],
-        ["4", "2", "6", "8", "5", "3", "7", "9", "1"],
-        ["7", "1", "3", "9", "2", "4", "8", "5", "6"],
-        ["9", "6", "1", "5", "3", "7", "2", "8", "4"],
-        ["2", "8", "7", "4", "1", "9", "6", "3", "5"],
-        ["3", "4", "5", "2", "8", "6", "1", "7", "9"],
-    ]
-    for _ in range(81 - N):
-        r, c = randint(0, 8), randint(0, 8)
-        while new_grid[r][c] == ".":
-            r, c = randint(0, 8), randint(0, 8)
+    
+    # Генерируем пустое поле
+    empty_grid = [["."] * 9 for _ in range(9)]
+    
+    # Решаем пустое поле - получаем случайное решение
+    # Для генерации разных решений используем случайный порядок перебора значений
+    def solve_for_generation(grid: tp.List[tp.List[str]]) -> tp.Optional[tp.List[tp.List[str]]]:
+        """Решение с случайным порядком значений для генерации разных решений"""
+        empty_position = find_empty_positions(grid)
+        if not empty_position:
+            return grid
+        r, c = empty_position
+        possible_values = list(find_possible_values(grid, empty_position))
+        shuffle(possible_values)  # Перемешиваем для получения разных решений
+        for val in possible_values:
+            grid[r][c] = val
+            res = solve_for_generation(grid)
+            if res:
+                return res
+            grid[r][c] = "."
+        return None
+    
+    # Генерируем решение
+    solved_grid = solve_for_generation(empty_grid)
+    
+    if solved_grid is None:
+        # Если не получилось решить, используем базовое решение
+        solved_grid = [
+            ["5", "3", "4", "6", "7", "8", "9", "1", "2"],
+            ["6", "7", "2", "1", "9", "5", "3", "4", "8"],
+            ["1", "9", "8", "3", "4", "2", "5", "6", "7"],
+            ["8", "5", "9", "7", "6", "1", "4", "2", "3"],
+            ["4", "2", "6", "8", "5", "3", "7", "9", "1"],
+            ["7", "1", "3", "9", "2", "4", "8", "5", "6"],
+            ["9", "6", "1", "5", "3", "7", "2", "8", "4"],
+            ["2", "8", "7", "4", "1", "9", "6", "3", "5"],
+            ["3", "4", "5", "2", "8", "6", "1", "7", "9"],
+        ]
+    
+    # Удаляем элементы до получения N заполненных
+    positions = [(r, c) for r in range(9) for c in range(9)]
+    shuffle(positions)
+    
+    new_grid = [row[:] for row in solved_grid]  # Копируем решение
+    for r, c in positions[:81 - N]:
         new_grid[r][c] = "."
+    
     return new_grid
 
 
@@ -220,3 +250,4 @@ if __name__ == "__main__":
             print(f"Puzzle {fname} can't be solved")
         else:
             display(solution)
+
