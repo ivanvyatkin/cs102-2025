@@ -57,25 +57,23 @@ def get_exits(grid: list[list[str | int]]) -> list[tuple[int, int]]:
     """Find a couple of positions with X, NOTE: the test expects coordinates like (y, x)"""
     exits = []
     for y, row in enumerate(grid):
-        for x, s in enumerate(row):
-            if s == "X":
+        for x, cell_value in enumerate(row):
+            if cell_value == "X":
                 exits.append((y, x))
     return exits
 
 
-def make_step(grid: list[list[str | int]], k: int) -> list[list[str | int]]:
+def make_step(grid: list[list[str | int]], step_number: int) -> list[list[str | int]]:
     """Find the first cell that contains k, fill empty cells around it with k+1"""
     rows = len(grid)
     cols = len(grid[0])
     for y, row in enumerate(grid):
-        for x, s in enumerate(row):
-            if s == k:
-                k += 1
+        for x, cell_value in enumerate(row):
+            if cell_value == step_number:
                 for fill_x, fill_y in [(x, y + 1), (x, y - 1), (x + 1, y), (x - 1, y)]:
                     if fill_x in range(0, cols) and fill_y in range(0, rows):
                         if grid[fill_y][fill_x] == 0:
-                            grid[fill_y][fill_x] = k
-                k -= 1
+                            grid[fill_y][fill_x] = step_number + 1
 
     return grid
 
@@ -88,14 +86,17 @@ def shortest_path(
     cols = len(grid[0])
 
     y, x = exit_coord
-    k = int(grid[y][x])
+    try:
+        step_number = int(grid[y][x])
+    except (ValueError, TypeError):
+        return None
     path = [(y, x)]
     while grid[y][x] != 1:
         for check_x, check_y in [(x, y + 1), (x, y - 1), (x + 1, y), (x - 1, y)]:
             if check_x in range(0, cols) and check_y in range(0, rows):
-                if grid[check_y][check_x] == k - 1:
+                if grid[check_y][check_x] == step_number - 1:
                     path.append((check_y, check_x))
-                    k -= 1
+                    step_number -= 1
                     x, y = check_x, check_y
                     break
 
@@ -144,14 +145,14 @@ def solve_maze(
     grid[y_out][x_out] = 0
 
     for y, row in enumerate(grid):
-        for x, s in enumerate(row):
-            if s == " ":
+        for x, cell_value in enumerate(row):
+            if cell_value == " ":
                 grid[y][x] = 0
 
-    k = 0
+    step_number = 0
     while grid[y_out][x_out] == 0:
-        k += 1
-        grid = make_step(grid, k)
+        step_number += 1
+        grid = make_step(grid, step_number)
 
     path = shortest_path(grid, (y_out, x_out))
     return grid, path
