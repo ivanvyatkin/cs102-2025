@@ -2,46 +2,21 @@ import pathlib
 import random
 import typing as tp
 
+import pygame
+from pygame.locals import *
+
 Cell = tp.Tuple[int, int]
 Cells = tp.List[int]
 Grid = tp.List[Cells]
 
-# Константы для правил игры
-MIN_NEIGHBOURS_TO_SURVIVE = 2
-MAX_NEIGHBOURS_TO_SURVIVE = 3
-NEIGHBOURS_TO_REPRODUCE = 3
-
 
 class GameOfLife:
-    """
-    Класс для реализации игры "Жизнь" Конвея.
-    
-    Правила игры:
-    - Живая клетка с 2-3 соседями выживает, иначе умирает
-    - Мертвая клетка с 3 соседями оживает
-    """
-
     def __init__(
-        self, 
-        size: tp.Tuple[int, int], 
-        randomize: bool = True, 
-        max_generations: tp.Optional[float] = float("inf")
+        self,
+        size: tp.Tuple[int, int],
+        randomize: bool = True,
+        max_generations: tp.Optional[float] = float("inf"),
     ) -> None:
-        """
-        Инициализация игры.
-        
-        Parameters
-        ----------
-        size : Tuple[int, int]
-            Размер игрового поля (rows, cols)
-        randomize : bool
-            Если True, создается случайное начальное состояние
-        max_generations : Optional[float]
-            Максимальное количество поколений (по умолчанию бесконечно)
-        """
-        if size[0] <= 0 or size[1] <= 0:
-            raise ValueError("Размеры поля должны быть положительными числами")
-        
         # Размер клеточного поля
         self.rows, self.cols = size
         # Предыдущее поколение клеток
@@ -54,94 +29,39 @@ class GameOfLife:
         self.generations = 1
 
     def create_grid(self, randomize: bool = False) -> Grid:
-        """
-        Создание списка клеток.
-
-        Клетка считается живой, если ее значение равно 1, в противном случае клетка
-        считается мертвой, то есть, ее значение равно 0.
-        
-        Parameters
-        ----------
-        randomize : bool
-            Если True, клетки заполняются случайными значениями (0 или 1)
-            
-        Returns
-        -------
-        Grid
-            Двумерный список клеток
-        """
         if randomize:
             return [[random.randint(0, 1) for _ in range(self.cols)] for _ in range(self.rows)]
         return [[0] * self.cols for _ in range(self.rows)]
 
     def get_neighbours(self, cell: Cell) -> Cells:
-        """
-        Вернуть список соседних клеток для клетки `cell`.
-
-        Соседними считаются клетки по горизонтали, вертикали и диагоналям,
-        то есть, во всех направлениях.
-
-        Parameters
-        ----------
-        cell : Cell
-            Клетка, для которой необходимо получить список соседей. Клетка
-            представлена кортежем, содержащим ее координаты на игровом поле.
-
-        Returns
-        -------
-        Cells
-            Список значений соседних клеток (0 или 1)
-        """
         x, y = cell
         neighbours = []
-        
-        # Проверяем все 8 соседних клеток
-        for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                if dx == 0 and dy == 0:
-                    continue  # Пропускаем саму клетку
-                
-                nx, ny = x + dx, y + dy
-                # Проверяем границы поля
-                if 0 <= nx < self.rows and 0 <= ny < self.cols:
-                    neighbours.append(self.curr_generation[nx][ny])
-        
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if (x, y) != (x + i, y + j):
+                    new_x, new_y = x + i, y + j
+                    if 0 <= new_x < self.rows and 0 <= new_y < self.cols:
+                        neighbours.append(self.curr_generation[new_x][new_y])
         return neighbours
 
     def get_next_generation(self) -> Grid:
-        """
-        Получить следующее поколение клеток согласно правилам игры "Жизнь".
-
-        Returns
-        -------
-        Grid
-            Новое поколение клеток
-        """
-        new_grid = [[0] * self.cols for _ in range(self.rows)]
-
+        new_grid = self.create_grid(randomize=False)
         for x in range(self.rows):
             for y in range(self.cols):
                 neighbours = self.get_neighbours((x, y))
-                live_neighbours = sum(neighbours)
-                current_cell = self.curr_generation[x][y]
-                
-                # Применяем правила игры
-                if current_cell == 1:
-                    # Живая клетка выживает, если у нее 2-3 соседа
-                    if MIN_NEIGHBOURS_TO_SURVIVE <= live_neighbours <= MAX_NEIGHBOURS_TO_SURVIVE:
+                if self.curr_generation[x][y] == 1:
+                    if sum(neighbours) == 2 or sum(neighbours) == 3:
                         new_grid[x][y] = 1
                 else:
-                    # Мертвая клетка оживает, если у нее ровно 3 соседа
-                    if live_neighbours == NEIGHBOURS_TO_REPRODUCE:
+                    if sum(neighbours) == 3:
                         new_grid[x][y] = 1
-        
         return new_grid
 
     def step(self) -> None:
         """
-        Выполнить один шаг игры (переход к следующему поколению).
+        Выполнить один шаг игры.
         """
-        self.prev_generation = [row[:] for row in self.curr_generation]  # Глубокое копирование
+        self.prev_generation = [row[:] for row in self.curr_generation]
         self.curr_generation = self.get_next_generation()
         self.generations += 1
 
@@ -149,130 +69,37 @@ class GameOfLife:
     def is_max_generations_exceeded(self) -> bool:
         """
         Не превысило ли текущее число поколений максимально допустимое.
-        
-        Returns
-        -------
-        bool
-            True, если достигнут лимит поколений, иначе False
         """
-        if self.max_generations is None:
-            return False
-        return self.generations >= self.max_generations
+        return self.max_generations is not None and self.generations >= self.max_generations
 
     @property
     def is_changing(self) -> bool:
         """
         Изменилось ли состояние клеток с предыдущего шага.
-        
-        Оптимизированная версия: сравнивает клетки поэлементно и останавливается
-        при первом различии для лучшей производительности.
-        
-        Returns
-        -------
-        bool
-            True, если состояние изменилось, иначе False
         """
-        # Быстрая проверка: если размеры не совпадают, то точно изменилось
-        if len(self.prev_generation) != len(self.curr_generation):
-            return True
-        
-        # Поэлементное сравнение с ранним выходом
-        for i in range(self.rows):
-            if len(self.prev_generation[i]) != len(self.curr_generation[i]):
-                return True
-            for j in range(self.cols):
-                if self.prev_generation[i][j] != self.curr_generation[i][j]:
-                    return True
-        
-        return False
+        return self.curr_generation != self.prev_generation
 
     @staticmethod
     def from_file(filename: pathlib.Path) -> "GameOfLife":
         """
         Прочитать состояние клеток из указанного файла.
-        
-        Формат файла: каждая строка представляет строку сетки,
-        где '0' - мертвая клетка, '1' - живая клетка.
-        
-        Parameters
-        ----------
-        filename : pathlib.Path
-            Путь к файлу с начальным состоянием
-            
-        Returns
-        -------
-        GameOfLife
-            Экземпляр игры с загруженным состоянием
-            
-        Raises
-        ------
-        FileNotFoundError
-            Если файл не найден
-        ValueError
-            Если формат файла некорректен
         """
-        try:
-            with open(filename, encoding="utf-8") as f:
-                grid = []
-                for line_num, line in enumerate(f, start=1):
-                    line = line.strip()
-                    if not line:
-                        continue  # Пропускаем пустые строки
-                    
-                    row = []
-                    for char in line:
-                        if char not in '01':
-                            raise ValueError(
-                                f"Неверный символ '{char}' в строке {line_num}. "
-                                f"Ожидаются только '0' и '1'"
-                            )
-                        row.append(int(char))
-                    
-                    if row:
-                        grid.append(row)
-            
-            if not grid:
-                raise ValueError("Файл пуст или содержит только пустые строки")
-            
-            # Проверяем, что все строки имеют одинаковую длину
-            cols = len(grid[0])
-            for i, row in enumerate(grid, start=1):
-                if len(row) != cols:
-                    raise ValueError(
-                        f"Строка {i} имеет длину {len(row)}, "
-                        f"ожидалась длина {cols}"
-                    )
-            
-            rows = len(grid)
-            game = GameOfLife((rows, cols), randomize=False)
-            game.curr_generation = grid
-            return game
-            
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Файл '{filename}' не найден")
-        except IOError as e:
-            raise IOError(f"Ошибка при чтении файла '{filename}': {e}")
+        with open(filename) as f:
+            lines = f.readlines()
+            game = GameOfLife((len(lines), len(lines[0].strip())), False)
+            for x, row in enumerate(lines):
+                for y, cell in enumerate(row.strip()):
+                    if cell == "1":
+                        game.curr_generation[x][y] = 1
+                    else:
+                        game.curr_generation[x][y] = 0
+        return game
 
     def save(self, filename: pathlib.Path) -> None:
         """
         Сохранить текущее состояние клеток в указанный файл.
-        
-        Формат файла: каждая строка представляет строку сетки,
-        где '0' - мертвая клетка, '1' - живая клетка.
-        
-        Parameters
-        ----------
-        filename : pathlib.Path
-            Путь к файлу для сохранения
-            
-        Raises
-        ------
-        IOError
-            Если произошла ошибка при записи файла
         """
-        try:
-            with open(filename, "w", encoding="utf-8") as f:
-                for row in self.curr_generation:
-                    f.write("".join(str(cell) for cell in row) + "\n")
-        except IOError as e:
-            raise IOError(f"Ошибка при записи файла '{filename}': {e}")
+        with open(filename, "w") as f:
+            for row in self.curr_generation:
+                string = "".join("1" if cell == 1 else "0" for cell in row) + "\n"
+                f.write(string)
